@@ -5,6 +5,7 @@
 #include "Framework/TileMap.h"
 #include "Player.h"
 #include "Framework/Collision.h"
+#include "Switch.h"
 
 class Level1 : BaseLevel {
 public:
@@ -15,6 +16,9 @@ public:
 	void update(float dt);
 	void render();
 
+	void setWantsToPause(bool paused) { m_isPaused = paused; }
+	bool getWantsToPause() { return m_isPaused; }
+
 private:
 	// Default functions for rendering to the screen.
 
@@ -23,4 +27,12 @@ private:
 
 	Player m_player;
 
+	bool m_isPaused;
+
+	sf::Font m_font;
+	sf::Text m_pauseMenu;
+
+	sf::Texture m_tileTexture;
+	GameObject m_flag;
+	Switch m_switch;
 };

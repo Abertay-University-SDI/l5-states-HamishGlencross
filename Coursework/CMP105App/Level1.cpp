@@ -2,7 +2,7 @@
 
 
 Level1::Level1(sf::RenderWindow& hwnd, Input& in, GameState& gs) :
-	BaseLevel(hwnd, in, gs)
+	BaseLevel(hwnd, in, gs), m_pauseMenu(m_font)
 {
 	int tile_size = 18;
 	int num_cols = 20;
@@ -27,6 +27,22 @@ Level1::Level1(sf::RenderWindow& hwnd, Input& in, GameState& gs) :
 		tileSet.push_back(tile);
 	}
 
+	if (!m_font.openFromFile("font/arial.ttf")) std::cerr << "no font";
+	m_pauseMenu.setFont(m_font);
+	m_pauseMenu.setString("Game Paused");
+	m_pauseMenu.setPosition({ 200, 50 });
+
+	if (!m_tileTexture.loadFromFile("gfx/tilemap.png")) 
+		std::cerr << "No tiles";
+	m_flag.setTexture(&m_tileTexture);
+	m_flag.setTextureRect({ {11 * 19, 5 * 19},{18,18} });
+	m_flag.setPosition({ 90 * 9, 344 });
+	m_flag.setSize({ 36,36 });
+	m_switch.setTexture(&m_tileTexture);
+	m_switch.setTextureRect({ {6 * 19,3 * 19}, {18,18} });
+	m_switch.setPosition({ 90 * 4, 254 });
+	m_switch.setSize({ 36,36 });
+
 	// Add Blank
 	tile.setTextureRect({ {0, 0}, {-tile_size, -tile_size} });
 	int b = tileSet.size();
@@ -34,8 +50,8 @@ Level1::Level1(sf::RenderWindow& hwnd, Input& in, GameState& gs) :
 	tileSet.push_back(tile);
 
 	std::vector<int> tileMapLocations{
-		b,	b,	20,	b,	b,	b,	b,	b,	b,	112,
-		b,	21, 104,22,	22,23,	b,	b,	b,	131,
+		b,	b,	20,	b,	b,	b,	b,	b,	b,	b,
+		b,	21, 104,22,	22,23,	b,	b,	b,	b,
 		1,	142,142,142,142,142,3,	b,	81,	83
 	};
 	sf::Vector2u mapSize = { 10, 3 };
@@ -56,15 +72,26 @@ void Level1::handleInput(float dt)
 	{
 		std::cout << "left mouse pressed" << std::endl;
 	}
-
-	m_player.handleInput(dt);
+	if (m_input.isPressed(sf::Keyboard::Scancode::P))
+	{
+		m_isPaused = !m_isPaused;
+	}
+	if (!m_isPaused)
+	{
+		m_player.handleInput(dt);
+	}
 }
 
 // Update game objects
 void Level1::update(float dt)
 {
-	m_player.update(dt);
+	if (m_isPaused) return;
 	
+	m_player.setSwitch(&m_switch);
+	m_player.setFlag(&m_flag);
+
+	m_player.update(dt);
+
 	std::vector<GameObject>& tileSet = *m_tileMap.getLevel();
 
 	for (auto& tile : tileSet)
@@ -75,8 +102,15 @@ void Level1::update(float dt)
 		}
 	}
 
+	if (m_player.getWantsEndGame())
+	{
+		std::cout << "Player wants to end game\n";
+		m_player.setWantsEndGame(false);
+		m_gameState.setCurrentState(State::CREDITS);
+		m_player.setPosition({ 50, 0 });
+		m_player.setVelocity({ 0, 0 });
+	}
 	
-
 }
 
 // Render Level1
@@ -84,7 +118,15 @@ void Level1::render()
 {
 	beginDraw();
 	m_tileMap.render(m_window);
+	m_window.draw(m_switch);
+	m_window.draw(m_flag);
 	m_window.draw(m_player);
+
+	if (m_isPaused)
+	{
+		m_window.draw(m_pauseMenu);
+	}
+
 	endDraw();
 }
 

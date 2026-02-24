@@ -32,6 +32,21 @@ void Player::handleInput(float dt)
 
 		m_isOnGround = false;
 	}
+
+	if (m_input->isPressed(sf::Keyboard::Scancode::F))
+	{
+		if ((getPosition() - m_flagPointer->getPosition()).lengthSquared() < 1000)//spoooky bad magic number
+		{
+			std::cout << "Pressed flag\n";
+			m_wantsToEndGame = true;
+		}
+
+		if ((getPosition() - m_switchPointer->getPosition()).lengthSquared() < 1000)
+		{
+			std::cout << "Pressed switch\n";
+			m_switchPointer->toggle();
+		}
+	}
 }
 
 void Player::update(float dt)
@@ -74,14 +89,16 @@ void Player::collisionResponse(GameObject& collider)
 	{
 		//horizontal collision
 
+		std::cout << "Horizontal Collision\n";
+
 		m_velocity.x *= -COEFF_RESTITUTION;
 
 		if (playerCollider.position.x < wallBounds.position.x)
 		{
-			move({ getPosition().x - overlap->size.x, getPosition().y });
+			setPosition({ getPosition().x - overlap->size.x, getPosition().y });
 		}
 		else
-			move({ getPosition().x + overlap->size.x, getPosition().y });
+			setPosition({ getPosition().x + overlap->size.x, getPosition().y });
 	}
 }
 
